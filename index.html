@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            grid-template-rows: repeat(5, 50px);
+            gap: 2px;
+            margin-bottom: 20px;
+            background-color: #000; /* Grid background color */
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #000; /* Cell background color */
+            border: 1px solid #fff; /* Cell border color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff; /* Text color */
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .controls input {
+            padding: 5px;
+            font-size: 14px;
+        }
+        .controls button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-board">
+        <!-- Game board cells will be dynamically generated here -->
+    </div>
+    <div class="controls">
+        <input type="text" id="command-input" placeholder="Enter move command">
+        <button onclick="executeMove()">Move</button>
+    </div>
+
+    <script>
+        const gameBoard = document.getElementById('game-board');
+        const commandInput = document.getElementById('command-input');
+
+        // Character positions on the grid (0-based index)
+        let positions = {
+            'A-P1': 0,
+            'A-P2': 1,
+            'A-H1': 2,
+            'A-H2': 3,
+            'A-H3': 4,
+            'B-H3': 24,
+            'B-H2': 23,
+            'B-H1': 22,
+            'B-P2': 21,
+            'B-P1': 20,
+        };
+
+        // Initialize the grid with characters
+        function initializeBoard() {
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.id = `cell-${i}`;
+                gameBoard.appendChild(cell);
+            }
+            updateBoard(); // Render characters after initializing the board
+        }
+
+        // Function to execute a move command
+        function executeMove() {
+    const command = commandInput.value.toUpperCase().trim();
+    console.log(`Command received: ${command}`);
+    
+    if (!command) {
+        alert('Please enter a command');
+        return;
+    }
+
+    // Split the command by ':'
+    const parts = command.split(':');
+    if (parts.length !== 2) {
+        alert('Invalid command format. Use <character_name>:<move>');
+        return;
+    }
+
+    const charName = parts[0].trim();
+    const move = parts[1].trim();
+    
+    console.log(`Character name: ${charName}`);
+    console.log(`Move command: ${move}`);
+
+    if (!positions[charName]) {
+        alert('Invalid character name');
+        return;
+    }
+
+    let currentIndex = positions[charName];
+    let newIndex;
+
+    switch (move) {
+        case 'L':
+            newIndex = (currentIndex % 5 !== 0) ? currentIndex - 1 : currentIndex;
+            break;
+        case 'R':
+            newIndex = (currentIndex % 5 !== 4) ? currentIndex + 1 : currentIndex;
+            break;
+        case 'F':
+            newIndex = (currentIndex - 5 >= 0) ? currentIndex - 5 : currentIndex+1;
+            break;
+        case 'B':
+            newIndex = (currentIndex + 5 < 25) ? currentIndex + 5 : currentIndex-1;
+            break;
+        case 'FL':
+            newIndex = (currentIndex % 5 !== 0 && currentIndex - 6 >= 0) ? currentIndex - 6 : currentIndex;
+            break;
+        case 'FR':
+            newIndex = (currentIndex % 5 !== 4 && currentIndex - 4 >= 0) ? currentIndex - 4 : currentIndex;
+            break;
+        case 'BL':
+            newIndex = (currentIndex % 5 !== 0 && currentIndex + 4 < 25) ? currentIndex + 4 : currentIndex;
+            break;
+        case 'BR':
+            newIndex = (currentIndex % 5 !== 4 && currentIndex + 6 < 25) ? currentIndex + 6 : currentIndex;
+            break;
+        default:
+            alert('Invalid move command');
+            return;
+    }
+
+    console.log(`Current index: ${currentIndex}, New index: ${newIndex}`);
+
+    if (newIndex < 0 || newIndex >= 25) {
+        alert('Move out of bounds');
+        return;
+    }
+
+    // If the destination cell is occupied by an opponent, the opponent is killed
+    for (const [char, pos] of Object.entries(positions)) {
+        if (pos === newIndex && char !== charName) {
+            delete positions[char];
+            break;
+        }
+    }
+
+    // Update the position of the character
+    positions[charName] = newIndex;
+
+    // Re-render the board
+    updateBoard();
+}
+
+
+        // Update the board after a move
+        function updateBoard() {
+            // Clear all cells
+            for (let i = 0; i < 25; i++) {
+                document.getElementById(`cell-${i}`).textContent = '';
+            }
+
+            // Place characters on the board
+            for (const [char, pos] of Object.entries(positions)) {
+                document.getElementById(`cell-${pos}`).textContent = char;
+            }
+        }
+
+        // Initialize the board on page load
+        initializeBoard();
+    </script>
+    
+</body>
+</html>
